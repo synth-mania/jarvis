@@ -49,21 +49,27 @@ class MainProgram:
         self.data_manager = DataSourceManager()
         self.conversation = ConversationHistory()
     
-    def process_query(self, user_input):
-        # Include conversation history in source classification
+    def process_query(self, user_input: str):
+        # Use chat context for classification but keep data separate
         chat_context = self.conversation.get_context()
         sources = self.llm_interface.classify_sources(user_input, chat_context)
         
-        # Gather context from identified sources
+        # Get fresh data from sources
         data_context = self.data_manager.get_context(sources)
         
-        # Combine all context
-        full_context = f"{chat_context}\n{data_context}"
+        # Combine contexts for the final response
+        full_context = f"""
+Conversation History:
+{chat_context}
+
+Current Data from Sources:
+{data_context}
+"""
         
-        # Get LLM response with full context
+        # Get LLM response
         final_response = self.llm_interface.get_response(user_input, full_context)
         
-        # Save interaction to history
+        # Save only the interaction, not the data context
         self.conversation.add_interaction(user_input, final_response)
         
         return final_response

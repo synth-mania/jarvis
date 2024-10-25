@@ -1,0 +1,3 @@
+requests>=2.31.0
+python-dotenv>=1.0.0  # For loading environment variables
+typing-extensions>=4.8.0  # For better type hints
