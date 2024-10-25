@@ -1,4 +1,4 @@
-# AI Personal Assistant
+# Jarvis
 
 A modular Python-based personal assistant that interfaces with Large Language Models (LLMs) and integrates with various data sources to provide contextually aware responses.
 
