@@ -1,4 +1,10 @@
+from datetime import datetime
 from llm_interface import LLMInterface
+from data_sources import (
+    GoogleCalendarSource,
+    GoogleTasksSource,
+    GmailSource
+)
 
 class DataSourceManager:
     def __init__(self):
@@ -6,7 +12,6 @@ class DataSourceManager:
             'calendar': GoogleCalendarSource(),
             'tasks': GoogleTasksSource(),
             'email': GmailSource(),
-            # Add more sources as needed
         }
     
     def get_context(self, source_list):
@@ -62,3 +67,18 @@ class MainProgram:
         self.conversation.add_interaction(user_input, final_response)
         
         return final_response
+
+def main():
+    program = MainProgram()
+    
+    print("AI Assistant initialized. Type 'quit' to exit.")
+    while True:
+        user_input = input("\nYou: ").strip()
+        if user_input.lower() == 'quit':
+            break
+            
+        response = program.process_query(user_input)
+        print(f"\nAssistant: {response}")
+
+if __name__ == "__main__":
+    main()
