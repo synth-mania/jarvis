@@ -67,7 +67,7 @@ class LLMInterface:
         data = {
             "model": "anthropic/claude-3.5-sonnet",
             "messages": [
-                {"role": "system", "content": "You are a helpful assistant with access to the user's calendar, tasks, and email."},
+                {"role": "system", "content": "You are a helpful assistant with read-only access to the user's calendar, tasks, and email."},
                 {"role": "user", "content": prompt}
             ]
         }
