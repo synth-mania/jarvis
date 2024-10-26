@@ -1,2 +1,3 @@
+# OAuth credentials and tokens
 credentials.json
-token_tasks.pickle
+token_*.pickle
