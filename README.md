@@ -1,4 +1,3 @@
-```markdown
 # Jarvis Personal Assistant
 
 A command-line personal assistant that integrates with Google Calendar, Gmail, and Tasks to help manage your digital life.
