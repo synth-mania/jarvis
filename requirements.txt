@@ -1,3 +1,7 @@
 requests>=2.31.0
 python-dotenv>=1.0.0  # For loading environment variables
 typing-extensions>=4.8.0  # For better type hints
+google-auth-oauthlib>=1.0.0
+google-auth>=2.22.0
+google-api-python-client>=2.100.0
+python-dateutil>=2.8.2
