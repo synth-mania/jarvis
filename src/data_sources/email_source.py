@@ -1,5 +1,5 @@
 from .base_source import BaseDataSource
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -17,7 +17,7 @@ class GmailSource(BaseDataSource):
             'https://www.googleapis.com/auth/calendar.readonly',
             'https://www.googleapis.com/auth/tasks.readonly'
         ]
-        self.max_emails = 5  # Only fetch last 5 emails for context
+        self.max_emails = 20  # Only fetch last 20 emails for context (used to be 5)
         self.service = self._initialize_service()
     
     def _initialize_service(self):
@@ -68,12 +68,25 @@ class GmailSource(BaseDataSource):
                 'snippet': message.get('snippet', '')
             }
             
-            # Convert date string to datetime
+            # # Convert date string to datetime
+            # if email_data['date']:
+            #     try:
+            #         email_data['date'] = parsedate_to_datetime(email_data['date'])
+            #     except Exception:
+            #         email_data['date'] = datetime.now()
+            
+            
+             # Convert date string to timezone-aware datetime
             if email_data['date']:
                 try:
+                    # parsedate_to_datetime already returns timezone-aware datetime
                     email_data['date'] = parsedate_to_datetime(email_data['date'])
                 except Exception:
-                    email_data['date'] = datetime.now()
+                    # Ensure fallback datetime is timezone-aware
+                    email_data['date'] = datetime.now(timezone.utc)
+            else:
+                # Ensure default datetime is timezone-aware
+                email_data['date'] = datetime.now(timezone.utc)
             
             return email_data
             
@@ -82,7 +95,7 @@ class GmailSource(BaseDataSource):
             return {
                 'from': 'Error parsing email',
                 'subject': 'Parse error',
-                'date': datetime.now(),
+                'date': datetime.now(timezone.utc),
                 'snippet': 'Error occurred while parsing this email'
             }
     
@@ -110,10 +123,23 @@ class GmailSource(BaseDataSource):
                 detailed_messages.append(parsed_message)
             
             # Sort by date, newest first
+            # detailed_messages.sort(
+            #     key=lambda x: x['date'] if isinstance(x['date'], datetime) else datetime.now(timezone.utc),
+            #     reverse=True
+            # )
+            def get_aware_date(msg):
+                date = msg['date']
+                if isinstance(date, datetime):
+                    if date.tzinfo is None:  # if naive
+                        return date.replace(tzinfo=timezone.utc)  # make it UTC aware
+                    return date
+                return datetime.now(timezone.utc)
+            
             detailed_messages.sort(
-                key=lambda x: x['date'] if isinstance(x['date'], datetime) else datetime.now(),
+                key=get_aware_date,
                 reverse=True
             )
+
             
             return detailed_messages
             
