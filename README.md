@@ -1,98 +1,59 @@
-# Jarvis
+```markdown
+# Jarvis Personal Assistant
 
-A modular Python-based personal assistant that interfaces with Large Language Models (LLMs) and integrates with various data sources to provide contextually aware responses.
-
-## Overview
-
-This project creates an AI assistant that can:
-- Process natural language queries
-- Intelligently identify and incorporate relevant context from connected data sources (Google Calendar, Tasks, Email, etc.)
-- Maintain conversation history for contextual awareness
-- Interface with LLMs through APIs (OpenRouter, local models, etc.)
-
-## Project Structure
-
-```
-ai-assistant/
-├── src/
-│   ├── main.py
-│   ├── llm_interface.py
-│   ├── data_sources/
-│   │   ├── __init__.py
-│   │   ├── base_source.py
-│   │   ├── calendar_source.py
-│   │   ├── tasks_source.py
-│   │   └── email_source.py
-│   └── utils/
-│       ├── __init__.py
-│       └── conversation_history.py
-├── config/
-│   └── config.yaml
-├── tests/
-├── requirements.txt
-└── README.md
-```
-
-## Setup
-
-1. Clone the repository:
-```bash
-git clone https://github.com/synth-mania/jarvis.git
-cd jarvis
-```
-
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Configure your environment:
-- Copy `config/config.example.yaml` to `config/config.yaml`
-- Add your API keys and configuration settings
-
-## Usage
-
-```python
-python src/main.py
-```
+A command-line personal assistant that integrates with Google Calendar, Gmail, and Tasks to help manage your digital life.
 
 ## Features
 
-- **Contextual Understanding**: Automatically identifies which data sources are relevant to user queries
-- **Conversation Memory**: Maintains chat history for context-aware responses
-- **Modular Design**: Easily extensible with new data sources and features
-- **Data Source Integration**: Connects with various services (Google Calendar, Tasks, etc.)
+- Gmail integration (view unread emails)
+- Google Calendar integration (check upcoming events) 
+- Google Tasks tracking (view tasks)
 
-## Contributing
+## Prerequisites
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- Python 3.12+
+- Google account with API access enabled for:
+  - Gmail API
+  - Google Calendar API
+  - Google Tasks API
+- Google Cloud project credentials (`credentials.json`)
+- An openrouter.ai API key
 
-## Acknowledgments
+## Installation
 
-- OpenAI/OpenRouter for LLM capabilities
-- Google APIs for data source integration
-- [Add other acknowledgments as needed]
-
-## TODO
-
-- [ ] Implement basic LLM interface
-- [ ] Add Google Calendar integration
-- [ ] Add Google Tasks integration
-- [ ] Add conversation history management
-- [ ] Add email integration
-- [ ] Add configuration management
-- [ ] Add tests
-- [ ] Add documentation
+1. Clone the repository
+2. Place your `credentials.json` file in the `src/data_sources/` directory
+3. Configure environment with your API key
+    - Create a file named .env in the root directory of the repo
+    - paste "OPENROUTER_API_KEY=your_key_here" into the file
+    - replace "your_key_here" with your openrouter-provided API key
+4. Run the setup/start script:
+```bash
+./start-jarvis.sh
 ```
 
-This README provides a good starting point and can be expanded as the project grows. It includes sections for setup, usage, project structure, and contribution guidelines, which are essential for any open-source project.
+Jarvis will start after creating a python venv and installing prerequisites. 
+
+## Usage
+
+Basic usage:
+
+Navigate to the root directory of the repository, then execute the following bash command:
+```bash
+./start-jarvis.sh
+```
+
+## First Run Setup
+
+On first run, you'll need to:
+
+1. Authorize access to your Google account
+    - by opening the link printed to the console
+2. Grant permissions for Calendar, Gmail and Tasks access
+    - When Jarvis first tries to access each of these APIs, an error message will be printed to console. Click the link in that message to be brough to a google page where you can activate that API. Your next message requesting info from that API should work, provided your credentials.json has been set up properly.
+3. Token files will be created automatically for future use in /src/data_sources
+
+## Commands
+
+- Type 'quit' to exit
+- Any message mentioning one or more of your tasks, email, or calendar, directly or indirectly, will cause the relevant API(s) to be polled for info which will be included as context for your prompt.
