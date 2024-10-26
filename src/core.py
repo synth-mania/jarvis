@@ -55,6 +55,12 @@ class ProactiveTriggers:
                 'condition': lambda: self._is_time(time(8, 30)),  # 8:30 AM
                 'prompt': "Generate a morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational.",
                 'sources': ['calendar', 'tasks', 'email']
+            },
+            {
+                'name': 'helpful_prompt',
+                'condition': lambda: self._user_needs_message(),
+                'prompt': "Based on what you know about what the user is doing right now, and their calendar, email, and tasks, write a helpful message to them.",
+                'sources': ['calendar', 'tasks', 'email']
             }
             # Add more triggers here
         ]
@@ -66,6 +72,15 @@ class ProactiveTriggers:
         diff = abs(current_minutes - target_minutes)
         # print(f"Time check: Current {now}, Target {target_time}, Diff {diff} minutes")  # Debug
         return diff <= tolerance_minutes
+    
+    def _user_needs_message(self):
+        initial_response = self.main_program.process_query(
+            "Based on what you know about what the user is doing right now, and their calendar, email, and tasks, is there anything helpful you should say to them? Respond starting only with 'yes' or 'no'. Every message costs a little money, so if you (Jarvis) have recently given the user feedback, consider not sending anything. However, if something comes up, like a new email or task, that might justify a new message to the user."
+        )
+        initial_response = initial_response.strip().lower()
+        if initial_response.startswith("yes"):
+            return True
+        return False
 
 
     async def check_triggers(self):
