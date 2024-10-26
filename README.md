@@ -20,12 +20,23 @@ A command-line personal assistant that integrates with Google Calendar, Gmail, a
 
 ## Installation
 
+
 1. Clone the repository
 2. Place your `credentials.json` file in the `src/data_sources/` directory
-3. Configure environment with your API key
-    - Create a file named .env in the root directory of the repo
-    - paste "OPENROUTER_API_KEY=your_key_here" into the file
-    - replace "your_key_here" with your openrouter-provided API key
+3. Create a file named .env with environment variables in the root directory:
+
+```bash
+# For OpenRouter
+LLM_API_TYPE=openrouter
+OPENROUTER_API_KEY=your_key_here
+
+# For local API
+#LLM_API_TYPE=local
+#LOCAL_API_KEY=your_local_key_here
+#LOCAL_API_URL=http://localhost:1234/v1/chat/completions
+#LOCAL_MODEL_NAME=your-local-model-name
+```
+
 4. Run the setup/start script:
 ```bash
 ./start-jarvis.sh
