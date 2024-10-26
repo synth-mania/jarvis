@@ -1,3 +1,9 @@
+"""
+data_sources package provides integrations with Google Calendar, Tasks, and Gmail APIs.
+Requires proper Google OAuth2 credentials to function.
+"""
+
+
 # Import the classes we want to make available when importing the package
 from .base_source import BaseDataSource
 from .calendar_source import GoogleCalendarSource
