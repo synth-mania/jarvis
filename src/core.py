@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from .llm_interface import LLMInterface
 from .data_sources import (
@@ -43,6 +44,36 @@ class ConversationHistory:
             f"User: {interaction['user']}\nAssistant: {interaction['assistant']}"
             for interaction in self.history
         ])
+
+
+class ProactiveTriggers:
+    def __init__(self, main_program):
+        self.main_program = main_program
+        self.triggers = [
+            {
+                'name': 'morning_briefing',
+                'condition': lambda: self._is_time(time(8, 30)),  # 8:30 AM
+                'prompt': "Generate a morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational.",
+                'sources': ['calendar', 'tasks', 'email']
+            }
+            # Add more triggers here
+        ]
+
+    def _is_time(self, target_time: time, tolerance_minutes: int = 1) -> bool:
+        now = datetime.now().time()
+        target_minutes = target_time.hour * 60 + target_time.minute
+        current_minutes = now.hour * 60 + now.minute
+        return abs(current_minutes - target_minutes) <= tolerance_minutes
+
+    async def check_triggers(self):
+        while True:
+            for trigger in self.triggers:
+                if trigger['condition']():
+                    # Use existing MainProgram methods to handle the trigger
+                    response = self.main_program.process_query(trigger['prompt'])
+                    print(f"\n[Jarvis Proactive]: {response}")
+            await asyncio.sleep(60)
+
 
 class MainProgram:
     def __init__(self):
