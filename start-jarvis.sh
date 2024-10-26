@@ -12,6 +12,11 @@ source venv/bin/activate
 # Install requirements if needed
 pip install -r requirements.txt
 
+sleep 2
+
+# Clear terminal
+clear
+
 # Run the application
 python -m src
 
