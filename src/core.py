@@ -1,10 +1,11 @@
 from datetime import datetime
-from llm_interface import LLMInterface
-from data_sources import (
+from .llm_interface import LLMInterface
+from .data_sources import (
     GoogleCalendarSource,
     GoogleTasksSource,
     GmailSource
 )
+
 
 class DataSourceManager:
     def __init__(self):
