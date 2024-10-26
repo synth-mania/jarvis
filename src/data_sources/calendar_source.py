@@ -53,7 +53,7 @@ class GoogleCalendarSource(BaseDataSource):
             # Get the start of today and end of next week
             now = datetime.utcnow()
             start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            end = start + timedelta(days=7)
+            end = start + timedelta(days=14)
 
             # Format timestamps for Google Calendar API
             start_str = start.isoformat() + 'Z'
