@@ -1,6 +1,7 @@
 from typing import List
 import requests
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 
 class LLMInterface:
@@ -51,8 +52,12 @@ class LLMInterface:
     
     def get_response(self, query: str, context: str) -> str:
         """Generate a response to the user's query using the provided context."""
+        current_time = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
+    
         prompt = f"""Using the following context and conversation history, 
         provide a helpful response to the user's query.
+        
+        Current Time: {current_time}
         
         Context:
         {context}
@@ -60,7 +65,7 @@ class LLMInterface:
         Query: {query}"""
         
         data = {
-            "model": "anthropic/claude-3-sonnet-20240229",
+            "model": "anthropic/claude-3.5-sonnet",
             "messages": [
                 {"role": "system", "content": "You are a helpful assistant with access to the user's calendar, tasks, and email."},
                 {"role": "user", "content": prompt}
