@@ -75,7 +75,7 @@ class ProactiveTriggers:
     
     def _user_needs_message(self):
         initial_response = self.main_program.process_query(
-            "Based on what you know about what the user is doing right now, and their calendar, email, and tasks, is there anything helpful you should say to them? Respond starting only with 'yes' or 'no'. Every message costs a little money, so if you (Jarvis) have recently given the user feedback, consider not sending anything. However, if something comes up, like a new email or task, that might justify a new message to the user."
+            "Based on what you know about what the user is doing right now, and their calendar, email, and tasks, is there anything helpful you should say to them? Respond starting only with 'yes' or 'no'. Every message costs a little money, so if you (Jarvis) have recently given the user feedback, consider not sending anything. However, if something comes up, like a new email or task, that might justify a new message to the user, you should remind them of this."
         )
         initial_response = initial_response.strip().lower()
         if initial_response.startswith("yes"):
