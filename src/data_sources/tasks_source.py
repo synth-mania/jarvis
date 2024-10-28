@@ -1,4 +1,4 @@
-from .base_source import BaseDataSource
+from .data_source import DataSource
 from datetime import datetime, timedelta
 from typing import List, Dict
 from google.oauth2.credentials import Credentials
@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 import os
 import pickle
 
-class GoogleTasksSource(BaseDataSource):
+class GoogleTasksSource(DataSource):
     def __init__(self):
         super().__init__()
         self.SCOPES = [

@@ -1,14 +1,13 @@
 import asyncio
-from .core import MainProgram
+from .core import Agent, GoogleCalendarSource, GoogleTasksSource, GmailSource
 
-async def run_assistant():
-    program = MainProgram()
-    await program.run()
+async def run_agent():
+    await Agent([GoogleCalendarSource, GoogleTasksSource, GmailSource]).run()
 
 def main():
     print("Welcome to your personal assistant! (Type 'quit' to exit)\n")
     try:
-        asyncio.run(run_assistant())
+        asyncio.run(run_agent())
     except KeyboardInterrupt:
         print("\nGoodbye!")
     except Exception as e:

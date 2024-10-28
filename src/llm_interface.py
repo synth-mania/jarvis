@@ -1,7 +1,6 @@
 from typing import List
 import requests
 import os
-from datetime import datetime
 from dotenv import load_dotenv
 
 class LLMInterface:
@@ -47,53 +46,7 @@ class LLMInterface:
             print(f"API error: {e}")
             raise
         
-    def classify_sources(self, query: str, context: str) -> List[str]:
-        """Determine which data sources are relevant to the query."""
-        prompt = f"""Given the following user query and conversation context, 
-        determine which data sources are needed to answer the query.
-        Reply with only a Python list of strings, choosing from: 'calendar', 'tasks', 'email'.
-        
-        Context:
-        {context}
-        
-        Query: {query}
-        
-        Required sources:"""
-        
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant that determines which data sources are needed to answer queries."},
-            {"role": "user", "content": prompt}
-        ]
-        
-        try:
-            response = self._make_api_call(messages)
-            sources = eval(response)
-            valid_sources = ['calendar', 'tasks', 'email']
-            return [s for s in sources if s in valid_sources]
-        except Exception as e:
-            print(f"API error: {e}")
-            return ['calendar', 'tasks', 'email']
-    
-    def get_response(self, query: str, context: str) -> str:
-        """Generate a response to the user's query using the provided context."""
-        current_time = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
-    
-        prompt = f"""Using the following context and conversation history, 
-        provide a helpful response to the user's query.
-        
-        Current Time: {current_time}
-        
-        Context:
-        {context}
-        
-        Query: {query}"""
-        
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant named Jarvis with read-only access to the user's calendar, tasks, and email."},
-            {"role": "user", "content": prompt}
-        ]
-        
-        
+    def get_response(self, messages: list[dict]):
         try:
             return self._make_api_call(messages)
         except Exception as e:
