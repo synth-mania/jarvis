@@ -6,7 +6,19 @@ from .data_sources import (
     GoogleTasksSource,
     GmailSource
 )
+import subprocess
 
+def say(string:str):
+    # print(string)
+    command = ["flite", "-voice", "rms", "-t", string]
+
+    try:
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        print("Command executed successfully")
+        print("Output:", result.stdout)
+    except subprocess.CalledProcessError as e:
+        print("An error occurred while executing the command")
+        print("Error:", e.stderr)
 
 class DataSourceManager:
     def __init__(self):
@@ -91,6 +103,7 @@ class ProactiveTriggers:
                     # print(f"Trigger '{trigger['name']}' activated!")  # Debug
                     response = self.main_program.process_query(trigger['prompt'])
                     print(f"\nJarvis: {response}\n\nYou: ")
+                    say(response)
                 else:
                     # print(f"Trigger '{trigger['name']}' condition not met")  # Debug
                     pass
@@ -136,6 +149,7 @@ Current Data from Sources:
                     return
                 response = self.process_query(user_input)
                 print(f"Jarvis: {response}")
+                say(response)
 
         # Run both tasks concurrently
         try:
