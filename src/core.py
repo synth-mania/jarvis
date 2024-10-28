@@ -14,8 +14,8 @@ def say(string:str):
 
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True)
-        print("Command executed successfully")
-        print("Output:", result.stdout)
+        # print("Command executed successfully")
+        # print("Output:", result.stdout)
     except subprocess.CalledProcessError as e:
         print("An error occurred while executing the command")
         print("Error:", e.stderr)
