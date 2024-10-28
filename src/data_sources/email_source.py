@@ -1,4 +1,4 @@
-from .base_source import BaseDataSource
+from .data_source import DataSource
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 from google.oauth2.credentials import Credentials
@@ -9,7 +9,7 @@ import os
 import pickle
 from email.utils import parsedate_to_datetime
 
-class GmailSource(BaseDataSource):
+class GmailSource(DataSource):
     def __init__(self):
         super().__init__()
         self.SCOPES = [

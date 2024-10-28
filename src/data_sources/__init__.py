@@ -5,7 +5,7 @@ Requires proper Google OAuth2 credentials to function.
 
 
 # Import the classes we want to make available when importing the package
-from .base_source import BaseDataSource
+from .data_source import DataSource
 from .calendar_source import GoogleCalendarSource
 from .tasks_source import GoogleTasksSource
 from .email_source import GmailSource

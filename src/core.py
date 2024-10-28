@@ -1,66 +1,61 @@
 import asyncio
 from datetime import datetime, time
 from .llm_interface import LLMInterface
-from .data_sources import (
-    GoogleCalendarSource,
-    GoogleTasksSource,
-    GmailSource
-)
+from .data_sources import *
+import subprocess
+from copy import deepcopy
 
-
-class DataSourceManager:
-    def __init__(self):
-        self.sources = {
-            'calendar': GoogleCalendarSource(),
-            'tasks': GoogleTasksSource(),
-            'email': GmailSource(),
-        }
+def say(string:str):
+    # print(string)
+    for char in "#*-":
+        string = string.replace(char, "")
     
-    def get_context(self, source_list):
-        context = ""
-        for source in source_list:
-            if source in self.sources:
-                context += self.sources[source].get_data()
-        return context
+    command = ["flite", "-voice", "rms", "-t", string]
 
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        print("An error occurred while executing the command")
+        print("Error:", e.stderr)
 
-class ConversationHistory:
-    def __init__(self, max_history=10):
-        self.history = []
+def get_formatted_datetime() -> str:
+    """Returns current date and time in a consistent, readable format."""
+    return datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
+
+class Conversation:
+    def __init__(self, sys_msg: str, max_history=10):
+        self.sys_msg = {"role": "system", "content": sys_msg}
+        self.messages = []
         self.max_history = max_history
     
-    def add_interaction(self, user_input, llm_response):
-        self.history.append({
-            'user': user_input,
-            'assistant': llm_response,
-            'timestamp': datetime.now()
-        })
+    def add_interaction(self, role: str, content: str):
+        """
+        role should either be 'assistant' or 'user'
+        """
+        self.messages.append(
+            {"role": role, "content": content}
+        )
+
         # Keep only recent history to manage context length
-        if len(self.history) > self.max_history:
-            self.history.pop(0)
+        if len(self.messages) > self.max_history:
+            self.messages.pop(0)
     
-    def get_context(self):
-        return "\n".join([
-            f"User: {interaction['user']}\nAssistant: {interaction['assistant']}"
-            for interaction in self.history
-        ])
+    def get_messages(self) -> list[dict]:
+        return [self.sys_msg] + self.messages
 
-
-class ProactiveTriggers:
-    def __init__(self, main_program):
-        self.main_program = main_program
+class ProactiveTriggerHandler:
+    def __init__(self, agent: "Agent"):
+        self.agent = agent
         self.triggers = [
             {
                 'name': 'morning_briefing',
                 'condition': lambda: self._is_time(time(8, 30)),  # 8:30 AM
-                'prompt': "Generate a morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational.",
-                'sources': ['calendar', 'tasks', 'email']
+                'prompt': "Generate a morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational."
             },
             {
-                'name': 'helpful_prompt',
-                'condition': lambda: self._user_needs_message(),
-                'prompt': "Based on what you know about what the user is doing right now, and their calendar, email, and tasks, write a helpful message to them.",
-                'sources': ['calendar', 'tasks', 'email']
+                'name': 'update',
+                'condition': lambda: self._user_update(),
+                'prompt': "Write a helpful message updating me on what with my calendar, email, or tasks has changed, with emphasis if items should be prioritized."
             }
             # Add more triggers here
         ]
@@ -73,10 +68,23 @@ class ProactiveTriggers:
         # print(f"Time check: Current {now}, Target {target_time}, Diff {diff} minutes")  # Debug
         return diff <= tolerance_minutes
     
-    def _user_needs_message(self):
-        initial_response = self.main_program.process_query(
-            "Based on what you know about what the user is doing right now, and their calendar, email, and tasks, is there anything helpful you should say to them? Respond starting only with 'yes' or 'no'. Every message costs a little money, so if you (Jarvis) have recently given the user feedback, consider not sending anything. However, if something comes up, like a new email or task, that might justify a new message to the user, you should remind them of this."
+    def _user_update(self):
+        messages = deepcopy(self.agent.conversation.get_messages())
+        if len(messages) == 1:
+            return True
+        messages.append(
+            {
+                "role": "user",
+                "content": self.agent.get_context() + """Based on what you know about what the I am doing right now, is there anything helpful you should say to me?
+For example:
+If there is a new email, calendar event, or task that neither of us have mentioned, the answer is yes.
+If nothing has changed, the answer is no.
+If you are not sure, the answer is no.
+
+Respond starting only with 'yes' or 'no'. Be brief."""
+            }
         )
+        initial_response = self.agent.llm_interface.get_response(messages)
         initial_response = initial_response.strip().lower()
         if initial_response.startswith("yes"):
             return True
@@ -89,39 +97,46 @@ class ProactiveTriggers:
             for trigger in self.triggers:
                 if trigger['condition']():
                     # print(f"Trigger '{trigger['name']}' activated!")  # Debug
-                    response = self.main_program.process_query(trigger['prompt'])
-                    print(f"\nJarvis: {response}\n\nYou: ")
+                    self.agent.process_user_query(trigger['prompt'])
+                    print("\nYou: ", end="")
                 else:
                     # print(f"Trigger '{trigger['name']}' condition not met")  # Debug
                     pass
             await asyncio.sleep(60)
 
 
-class MainProgram:
-    def __init__(self):
+class Agent:
+    def __init__(self, data_sources: list[DataSource]):
+        self.data_sources = [source() for source in data_sources]
         self.llm_interface = LLMInterface()
-        self.data_manager = DataSourceManager()
-        self.conversation = ConversationHistory()
-        self.proactive = ProactiveTriggers(self)
-        
-    def process_query(self, user_input: str):
-        # Existing process_query implementation...
-        chat_context = self.conversation.get_context()
-        sources = self.llm_interface.classify_sources(user_input, chat_context)
-        
-        data_context = self.data_manager.get_context(sources)
-        
-        full_context = f"""
-Conversation History:
-{chat_context}
+        self.conversation = Conversation(
+            """You are Jarvis, a helpful AI assistant with read-only access to the user's calendar, tasks, and email. 
+You should use the provided data sources to give accurate and helpful responses.
+When referencing information from data sources, be specific about where the information came from.
+If you don't have enough information to answer completely, say so."""
+        )
+        self.proactive = ProactiveTriggerHandler(self)
+    
 
-Current Data from Sources:
-{data_context}
-"""
+    def get_context(self):
+        context = "Current date/time: " + get_formatted_datetime() + "\n"
+        for source in self.data_sources:
+            context += source.get_data()
+        return context
+
+    def process_user_query(self, user_input: str):
         
-        final_response = self.llm_interface.get_response(user_input, full_context)
-        self.conversation.add_interaction(user_input, final_response)
-        return final_response
+        context = f"Current data sources:\n{self.get_context()}\n"
+
+        self.conversation.add_interaction("user", context + user_input)
+
+        messages = self.conversation.get_messages()
+        
+        response = self.llm_interface.get_response(messages)
+        self.conversation.add_interaction("assistant", response)
+
+        print(f"\nJarvis: {response}")
+        say(response)
 
     async def run(self):
         """Run both interactive and proactive features concurrently"""
@@ -134,8 +149,8 @@ Current Data from Sources:
                 )
                 if user_input.lower() == 'quit':
                     return
-                response = self.process_query(user_input)
-                print(f"Jarvis: {response}")
+                
+                self.process_user_query(user_input)
 
         # Run both tasks concurrently
         try:
@@ -157,9 +172,9 @@ Current Data from Sources:
 
 
 def main():
-    """New entry point function"""
-    program = MainProgram()
-    asyncio.run(program.run())
+    """entry point function"""
+    agent = Agent([GoogleCalendarSource, GmailSource, GoogleTasksSource])
+    asyncio.run(agent.run())
 
 if __name__ == "__main__":
     main()

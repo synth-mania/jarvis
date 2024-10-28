@@ -3,7 +3,7 @@ from datetime import datetime
 from datetime import datetime
 from typing import Any, Optional
 
-class BaseDataSource:
+class DataSource:
     """Base class for all data sources (Calendar, Email, Tasks)."""
     
     def __init__(self):
