@@ -137,7 +137,8 @@ If you don't have enough information to answer completely, say so."""
 
         if conversation_effect:
             self.conversation.add_interaction("assistant", response)
-            print(f"\nJarvis: {response}")
+            # {datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")}
+            print(f"\n{datetime.now().strftime("%H:%M:%S")} Jarvis: {response}")
 
         return response
     
