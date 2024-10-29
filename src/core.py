@@ -69,23 +69,18 @@ class ProactiveTriggerHandler:
         return diff <= tolerance_minutes
     
     def _user_update(self):
-        if len(self.agent.conversation.get_messages) == 1:
+        if len(self.agent.conversation.get_messages()) == 1:
             return True
-        messages.append(
-            {
-                "role": "user",
-                "content": self.agent.get_context() + """Based on what you know about what the I am doing right now, is there anything helpful you should say to me?
+        
+        response = self.agent.process_user_query_no_effect("""Based on what you know about what the I am doing right now, is there anything helpful you should say to me?
 For example:
 If there is a new email, calendar event, or task that neither of us have mentioned, the answer is yes.
 If nothing has changed, the answer is no.
 If you are not sure, the answer is no.
 
-Respond starting only with 'yes' or 'no'. Be brief."""
-            }
-        )
-        initial_response = self.agent.llm_interface.get_response(messages)
-        initial_response = initial_response.strip().lower()
-        if initial_response.startswith("yes"):
+Respond starting only with 'yes' or 'no'. Be brief.""")
+        response = response.strip().lower()
+        if response.startswith("yes"):
             return True
         return False
 
