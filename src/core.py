@@ -93,7 +93,7 @@ Respond starting only with 'yes' or 'no'. Be brief.""")
             for trigger in self.triggers:
                 if trigger['condition']():
                     # print(f"Trigger '{trigger['name']}' activated!")  # Debug
-                    self.agent.process_user_query(trigger['prompt'])
+                    self.agent.process_query(trigger['prompt'])
                     print("\nYou: ", end="")
                 else:
                     # print(f"Trigger '{trigger['name']}' condition not met")  # Debug
@@ -119,7 +119,7 @@ If you don't have enough information to answer completely, say so."""
         context = "Current date/time: " + get_formatted_datetime() + "\n"
         for source in self.data_sources:
             context += source.get_data()
-        return context + "\nYour memory:\n"+self.memory+"\n(end of memories)\n"
+        return context #+ "\nYour memory:\n"+self.memory+"\n(end of memories)\n"
 
     def process_user_query_no_effect_no_context(self, user_input: str) -> str:
         return self.llm_interface.get_response(
@@ -131,35 +131,23 @@ If you don't have enough information to answer completely, say so."""
             self.conversation.get_messages() + [{"role": "user", "content": self.get_context() + user_input}]
         )
 
-    def process_user_query(self, user_input: str):
+    def process_query(self, user_input: str, conversation_effect: bool = True, use_context: bool = True):
         
-        context = f"Current data sources:\n{self.get_context()}"
+        context = ""
+
+        if use_context:
+            context += f"Current data sources:\n{self.get_context()}"
 
         self.conversation.add_interaction("user", context + user_input)
 
         messages = self.conversation.get_messages()
-        
         response = self.llm_interface.get_response(messages)
-        self.conversation.add_interaction("assistant", response)
 
-        print(f"\nJarvis: {response}")
-        say(response)
+        if conversation_effect:
+            self.conversation.add_interaction("assistant", response)
+            print(f"\nJarvis: {response}")
 
-        # self.update_memory()
-
-
-    def update_memory(self):
-        print("Considering updating memory...")
-        response = self.process_user_query_no_effect_no_context(
-            f"Your current memory: {self.memory} (End of memory) Is there any new information about me from my previous message that you want to store in your memories? Or do you otherwise want to change your memories? I have been reminding and will continue to remind you of your memories every time I say something, so it'll persist even though you only directly remember the previous ten messages. Information in previous instructions will be lost as you inevitably forget, so if it should be remembered, answer yes. Answer starting with 'yes' or 'no'"
-        )
-        print(response)
-        if response.strip().lower().startswith("yes"):
-            print("Updating memory...")
-            self.memory = self.process_user_query_no_effect_no_context(f"Your current memory: {self.memory} (End of memory) Rewrite your memories with any new or updated information about me which isn't a part of the data sources. Your memory can be up to ten sentances. Choosing to omit something from the new copy of your memory will mean it is lost forever. Respond only with the new copy of your memory, and nothing else.")
-            print(f"\nMemory:\n{self.memory}\n")
-            return
-        print("no")
+        return response
     
 
     async def run(self):
@@ -174,7 +162,7 @@ If you don't have enough information to answer completely, say so."""
                 if user_input.lower() == 'quit':
                     return
                 
-                self.process_user_query(user_input)
+                self.process_query(user_input)
 
         # Run both tasks concurrently
         try:
