@@ -50,7 +50,7 @@ class ProactiveTriggerHandler:
             {
                 'name': 'morning_briefing',
                 'condition': lambda: self._is_time(time(8, 30)),  # 8:30 AM
-                'prompt': "Generate a morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational."
+                'prompt': "Generate a concise morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational"
             },
             {
                 'name': 'update',
@@ -69,8 +69,7 @@ class ProactiveTriggerHandler:
         return diff <= tolerance_minutes
     
     def _user_update(self):
-        messages = deepcopy(self.agent.conversation.get_messages())
-        if len(messages) == 1:
+        if len(self.agent.conversation.get_messages) == 1:
             return True
         messages.append(
             {
@@ -106,12 +105,13 @@ Respond starting only with 'yes' or 'no'. Be brief."""
 
 
 class Agent:
-    def __init__(self, data_sources: list[DataSource]):
+    def __init__(self, data_sources: list[DataSource], memory = None):
         self.data_sources = [source() for source in data_sources]
         self.llm_interface = LLMInterface()
+        self.memory = memory if memory is not None else ""
         self.conversation = Conversation(
-            """You are Jarvis, a helpful AI assistant with read-only access to the user's calendar, tasks, and email. 
-You should use the provided data sources to give accurate and helpful responses.
+            """You are Jarvis, a helpful AI assistant with read-only access to the user's calendar, tasks, and email.
+You should use the provided data sources to give accurate and helpful responses. You can only directly remember up to 10 messages, but you have access to memory which is updated after every exchange, and persists.
 When referencing information from data sources, be specific about where the information came from.
 If you don't have enough information to answer completely, say so."""
         )
@@ -122,11 +122,16 @@ If you don't have enough information to answer completely, say so."""
         context = "Current date/time: " + get_formatted_datetime() + "\n"
         for source in self.data_sources:
             context += source.get_data()
-        return context
+        return context + "\nYour memory:\n"+self.memory+"\n(end of memories)\n"
+
+    def process_user_query_no_effect(self, user_input: str):
+        return self.llm_interface.get_response(
+            self.conversation.get_messages() + [{"role": "user", "content": self.get_context() + user_input}]
+        )
 
     def process_user_query(self, user_input: str):
         
-        context = f"Current data sources:\n{self.get_context()}\n"
+        context = f"Current data sources:\n{self.get_context()}"
 
         self.conversation.add_interaction("user", context + user_input)
 
@@ -137,6 +142,12 @@ If you don't have enough information to answer completely, say so."""
 
         print(f"\nJarvis: {response}")
         say(response)
+
+
+    def update_memory(self):
+        response = self.process_user_query_no_effect("Is there any new information about me which isn't part of the data sources that you want to store in your memories? Or do you otherwise want to change your memories? I'll remind you of your memories every time I say something, so it'll persist even though you only directly remember the previous ten messages. Answer starting with 'yes' or 'no'")
+        if response.strip().lower().startswith("yes"):
+            self.memory = self.process_user_query_no_effect("Rewrite your memories with any new or updated information about me which isn't a part of the data sources. Your memory can be up to ten sentances. Respond only with the new copy of your memory, and nothing else.")
 
     async def run(self):
         """Run both interactive and proactive features concurrently"""

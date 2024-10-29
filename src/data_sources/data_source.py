@@ -30,4 +30,4 @@ class DataSource:
         Format raw data into a readable string.
         Can be overridden by child classes.
         """
-        return str(data)
+        return str(data) + "\n"
