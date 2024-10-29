@@ -55,7 +55,7 @@ class ProactiveTriggerHandler:
             {
                 'name': 'update',
                 'condition': lambda: self._user_update(),
-                'prompt': "Write a helpful message updating me on what with my calendar, email, or tasks has changed, with emphasis if items should be prioritized."
+                'prompt': "Write a brief but helpful message updating me only on what with my calendar, email, or tasks has changed."
             }
             # Add more triggers here
         ]
