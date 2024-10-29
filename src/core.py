@@ -74,13 +74,16 @@ class ProactiveTriggerHandler:
         if len(self.agent.conversation.get_messages()) == 1:
             return True
         
-        response = self.agent.process_user_query_no_effect("""Based on what you know about what the I am doing right now, is there anything helpful you should say to me?
+        response = self.agent.process_query(
+            """Based on what you know about what the I am doing right now, is there anything helpful you should say to me?
 For example:
 If there is a new email, calendar event, or task that neither of us have mentioned, the answer is yes.
 If nothing has changed, the answer is no.
 If you are not sure, the answer is no.
 
-Respond starting only with 'yes' or 'no'. Be brief.""")
+Respond starting only with 'yes' or 'no'. Be brief.""",
+            conversation_effect=False
+        )
         response = response.strip().lower()
         if response.startswith("yes"):
             return True
@@ -120,16 +123,6 @@ If you don't have enough information to answer completely, say so."""
         for source in self.data_sources:
             context += source.get_data()
         return context #+ "\nYour memory:\n"+self.memory+"\n(end of memories)\n"
-
-    def process_user_query_no_effect_no_context(self, user_input: str) -> str:
-        return self.llm_interface.get_response(
-            self.conversation.get_messages() + [{"role": "user", "content": user_input}]
-        )
-
-    def process_user_query_no_effect(self, user_input: str) -> str:
-        return self.llm_interface.get_response(
-            self.conversation.get_messages() + [{"role": "user", "content": self.get_context() + user_input}]
-        )
 
     def process_query(self, user_input: str, conversation_effect: bool = True, use_context: bool = True):
         
