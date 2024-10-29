@@ -6,7 +6,7 @@ import subprocess
 from copy import deepcopy
 
 def say(string:str):
-    # print(string)
+    return
     for char in "#*-":
         string = string.replace(char, "")
     
@@ -39,6 +39,8 @@ class Conversation:
         # Keep only recent history to manage context length
         if len(self.messages) > self.max_history:
             self.messages.pop(0)
+        
+        # print("\n".join(str(msg) for msg in self.messages))
     
     def get_messages(self) -> list[dict]:
         return [self.sys_msg] + self.messages
@@ -51,12 +53,12 @@ class ProactiveTriggerHandler:
                 'name': 'morning_briefing',
                 'condition': lambda: self._is_time(time(8, 30)),  # 8:30 AM
                 'prompt': "Generate a concise morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational"
-            },
-            {
-                'name': 'update',
-                'condition': lambda: self._user_update(),
-                'prompt': "Write a brief but helpful message updating me only on what with my calendar, email, or tasks has changed."
             }
+            # ,{
+            #     'name': 'update',
+            #     'condition': lambda: self._user_update(),
+            #     'prompt': "Write a brief but helpful message updating me only on what with my calendar, email, or tasks has changed."
+            # }
             # Add more triggers here
         ]
 
@@ -119,7 +121,12 @@ If you don't have enough information to answer completely, say so."""
             context += source.get_data()
         return context + "\nYour memory:\n"+self.memory+"\n(end of memories)\n"
 
-    def process_user_query_no_effect(self, user_input: str):
+    def process_user_query_no_effect_no_context(self, user_input: str) -> str:
+        return self.llm_interface.get_response(
+            self.conversation.get_messages() + [{"role": "user", "content": user_input}]
+        )
+
+    def process_user_query_no_effect(self, user_input: str) -> str:
         return self.llm_interface.get_response(
             self.conversation.get_messages() + [{"role": "user", "content": self.get_context() + user_input}]
         )
@@ -138,11 +145,22 @@ If you don't have enough information to answer completely, say so."""
         print(f"\nJarvis: {response}")
         say(response)
 
+        # self.update_memory()
+
 
     def update_memory(self):
-        response = self.process_user_query_no_effect("Is there any new information about me which isn't part of the data sources that you want to store in your memories? Or do you otherwise want to change your memories? I'll remind you of your memories every time I say something, so it'll persist even though you only directly remember the previous ten messages. Answer starting with 'yes' or 'no'")
+        print("Considering updating memory...")
+        response = self.process_user_query_no_effect_no_context(
+            f"Your current memory: {self.memory} (End of memory) Is there any new information about me from my previous message that you want to store in your memories? Or do you otherwise want to change your memories? I have been reminding and will continue to remind you of your memories every time I say something, so it'll persist even though you only directly remember the previous ten messages. Information in previous instructions will be lost as you inevitably forget, so if it should be remembered, answer yes. Answer starting with 'yes' or 'no'"
+        )
+        print(response)
         if response.strip().lower().startswith("yes"):
-            self.memory = self.process_user_query_no_effect("Rewrite your memories with any new or updated information about me which isn't a part of the data sources. Your memory can be up to ten sentances. Respond only with the new copy of your memory, and nothing else.")
+            print("Updating memory...")
+            self.memory = self.process_user_query_no_effect_no_context(f"Your current memory: {self.memory} (End of memory) Rewrite your memories with any new or updated information about me which isn't a part of the data sources. Your memory can be up to ten sentances. Choosing to omit something from the new copy of your memory will mean it is lost forever. Respond only with the new copy of your memory, and nothing else.")
+            print(f"\nMemory:\n{self.memory}\n")
+            return
+        print("no")
+    
 
     async def run(self):
         """Run both interactive and proactive features concurrently"""
