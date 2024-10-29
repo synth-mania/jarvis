@@ -49,11 +49,11 @@ class ProactiveTriggerHandler:
     def __init__(self, agent: "Agent"):
         self.agent = agent
         self.triggers = [
-            {
-                'name': 'morning_briefing',
-                'condition': lambda: self._is_time(time(8, 30)),  # 8:30 AM
-                'prompt': "Generate a concise morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational"
-            }
+            # {
+            #     'name': 'morning_briefing',
+            #     'condition': lambda: self._is_time(time(8, 30)),  # 8:30 AM
+            #     'prompt': "Generate a concise morning briefing. Consider: current time, today's calendar events, urgent emails, and outstanding tasks. Make it friendly and motivational"
+            # }
             # ,{
             #     'name': 'update',
             #     'condition': lambda: self._user_update(),
