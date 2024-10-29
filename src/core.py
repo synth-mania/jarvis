@@ -174,12 +174,3 @@ If you don't have enough information to answer completely, say so."""
                 
         except asyncio.CancelledError:
             pass
-
-
-def main():
-    """entry point function"""
-    agent = Agent([GoogleCalendarSource, GmailSource, GoogleTasksSource])
-    asyncio.run(agent.run())
-
-if __name__ == "__main__":
-    main()
