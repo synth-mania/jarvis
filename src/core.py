@@ -3,7 +3,7 @@ from datetime import datetime, time
 from .llm_interface import LLMInterface
 from .data_sources import *
 import subprocess
-from copy import deepcopy
+import os
 
 def say(string:str):
     return
@@ -138,6 +138,8 @@ If you don't have enough information to answer completely, say so."""
         if conversation_effect:
             self.conversation.add_interaction("assistant", response)
             # {datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")}
+            columns, lines = os.get_terminal_size()
+            print("-" * columns)
             print(f"\n{datetime.now().strftime("%H:%M:%S")} Jarvis: {response}")
 
         return response
