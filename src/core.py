@@ -110,7 +110,7 @@ class Agent:
         self.llm_interface = LLMInterface()
         self.conversation = Conversation(
             """You are Jarvis, a helpful AI assistant with read-only access to the user's calendar, tasks, and email.
-You should use the provided data sources to give accurate and helpful responses. You can only directly remember up to 10 messages, but you have access to memory which is updated after every exchange, and persists.
+You should use the provided data sources to give accurate and helpful responses. You can only directly remember up to 10 messages.
 When referencing information from data sources, be specific about where the information came from.
 If you don't have enough information to answer completely, say so."""
         )
