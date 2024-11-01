@@ -129,7 +129,7 @@ If you don't have enough information to answer completely, say so."""
         context = "Current date/time: " + get_formatted_datetime() + "\n"
         for source in self.data_sources:
             context += source.get_data()
-        return context #+ "\nYour memory:\n"+self.memory+"\n(end of memories)\n"
+        return context
 
     def process_query(self, user_input: str, conversation_effect: bool = True, use_context: bool = True):
         
