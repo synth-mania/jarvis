@@ -104,13 +104,67 @@ Respond starting only with 'yes' or 'no'. Be brief.""",
             for trigger in self.triggers:
                 if trigger['condition']():
                     # print(f"Trigger '{trigger['name']}' activated!")  # Debug
+                    print("\nthinking...")
                     self.agent.process_query(trigger['prompt'])
-                    print("\nYou: ", end="")
                 else:
                     # print(f"Trigger '{trigger['name']}' condition not met")  # Debug
                     pass
             await asyncio.sleep(60)
 
+
+class CommandHandler:
+    def __init__(self, agent: "Agent"):
+        self.agent = agent
+    
+        self.commands = [
+            "quit",
+            "clear",
+            "llm-info",
+            "help",
+            "commands"
+        ]
+
+    def match(self, partial: str):
+        matches = [command for command in self.commands if command.startswith(partial)]
+        if len(matches) > 1:
+            print("Possible matches: "+", ".join(matches))
+            raise ValueError("Must specify a unique command name, more than one match found.")
+            return
+        if matches == []:
+            print(f"'{partial}' identified no commands")
+            return None
+        if matches[0] != partial:
+            print(matches[0])
+        return matches[0]
+    
+    def run(self, command: str, args: list[str]):
+        match command:
+            case "clear":
+                clear_screen()
+            case "llm-info":
+                interface = self.agent.llm_interface
+                if interface is None:
+                    print("No LLM interface is loaded. ")
+                else:
+                    print("\n".join([
+                        "API_TYPE = "+interface.api_type,
+                        "API_URL = "+interface.api_url,
+                        "MODEL = "+interface.model
+                    ]))
+            case "help":
+                if args == []:
+                    print("\n".join([
+                        "This chat interface provides several commands for convenience.",
+                        "Every command begins with '/', and may take further parameters separated by spaces.",
+                        "For example the '/help' command displays this body of text with general information about",
+                        "command use, but '/help commandname' will display more specific information about any given command.",
+                        "\nAdditionally, you need only give so many consequtive characters in the command name,",
+                        "starting with the first, that the command processor can uniquely identify which command you are referring to.",
+                        "For example, '/h' will also display this message."
+                        "\nTo see available commands, type '/commands'"
+                    ]))
+            case "commands":
+                print("\n".join(self.commands))
 
 class Agent:
     def __init__(self, data_sources: list[DataSource], memory = None):
@@ -123,13 +177,17 @@ When referencing information from data sources, be specific about where the info
 If you don't have enough information to answer completely, say so."""
         )
         self.proactive = ProactiveTriggerHandler(self)
-    
+        self.command = CommandHandler(self)
+
 
     def get_context(self):
         context = "Current date/time: " + get_formatted_datetime() + "\n"
         for source in self.data_sources:
             context += source.get_data()
         return context
+
+    def print_user_prompt(self):
+        print("\n> ", end="")
 
     def process_query(self, user_input: str, conversation_effect: bool = True, use_context: bool = True):
         
@@ -149,26 +207,52 @@ If you don't have enough information to answer completely, say so."""
             columns, lines = os.get_terminal_size()
             print("-" * columns)
             print(f"\n{datetime.now().strftime("%H:%M:%S")} Jarvis: {response}")
+            self.print_user_prompt()
 
         return response
     
 
     async def run(self):
         """Run both interactive and proactive features concurrently"""
-        # print("Starting proactive system...")
+        self.print_user_prompt()
         
         async def input_loop():
+
+            def handle_command() -> bool:
+                """
+                processes the user input as a command
+                returns a boolean value indicating if
+                the session should end
+                """
+                nonlocal user_input
+                user_input = user_input.split()
+                command, args = user_input[0][1:].lower(), user_input[1:]
+
+                try:
+                    command = self.command.match(command)
+                except ValueError as e:
+                    print(e)
+                    return False
+                
+                if command == "quit":
+                    return True
+                
+                if command is not None:
+                    self.command.run(command, args)
+
+                return False
+
             while True:
                 user_input = await asyncio.get_event_loop().run_in_executor(
-                    None, input, "\nYou: "
+                    None, input
                 )
-                if user_input.lower() == '/quit':
-                    return
-                if user_input.lower() == '/clear':
-                    clear_screen()
-                    continue
-                
-                self.process_query(user_input)
+
+                if user_input.startswith("/"):
+                    if handle_command():
+                        return
+                    self.print_user_prompt()
+                else:
+                    self.process_query(user_input)
 
         # Run both tasks concurrently
         try:
