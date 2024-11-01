@@ -150,6 +150,7 @@ class CommandHandler:
                         "API_TYPE = "+interface.api_type,
                         "API_URL = "+interface.api_url,
                         "MODEL = "+interface.model
+                        # ,"API_KEY omitted. Type '/print api-key' to view." # Not implemented yet
                     ]))
             case "help":
                 if args == []:
@@ -163,6 +164,18 @@ class CommandHandler:
                         "For example, '/h' will also display this message."
                         "\nTo see available commands, type '/commands'"
                     ]))
+                else:
+                    match args[0]:
+                        case "help":
+                            print("Bravo. You are either creative or stupid.")
+                        case "commands":
+                            print("Lists all available commands.")
+                        case "llm-info":
+                            print("Displays metadata about the currently loaded LLM API. Will not print the API_KEY.")
+                        case "clear":
+                            print("Clear the terminal.")
+                        case "quit":
+                            print("Quit Jarvis.")
             case "commands":
                 print("\n".join(self.commands))
 
