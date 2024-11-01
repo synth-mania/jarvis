@@ -5,6 +5,14 @@ from .data_sources import *
 import subprocess
 import os
 
+
+def clear_screen():
+    if os.name == 'nt':  # For Windows
+        _ = os.system('cls')
+    else:  # For Unix/Linux/macOS
+        _ = os.system('clear')
+
+
 def say(string:str):
     return
     for char in "#*-":
@@ -154,8 +162,11 @@ If you don't have enough information to answer completely, say so."""
                 user_input = await asyncio.get_event_loop().run_in_executor(
                     None, input, "\nYou: "
                 )
-                if user_input.lower() == 'quit':
+                if user_input.lower() == '/quit':
                     return
+                if user_input.lower() == '/clear':
+                    clear_screen()
+                    continue
                 
                 self.process_query(user_input)
 
