@@ -5,6 +5,10 @@ from .data_sources import *
 import subprocess
 import os
 
+default_prompt = """You are Jarvis, a helpful AI assistant with read-only access to the user's calendar, tasks, and email.
+You should use the provided data sources to give accurate and helpful responses. You can only directly remember up to 10 messages.
+When referencing information from data sources, be specific about where the information came from.
+If you don't have enough information to answer completely, say so."""
 
 def clear_screen():
     if os.name == 'nt':  # For Windows
@@ -121,7 +125,8 @@ class CommandHandler:
             "clear",
             "llm-info",
             "help",
-            "commands"
+            "commands",
+            "reset"
         ]
 
     def match(self, partial: str):
@@ -176,18 +181,21 @@ class CommandHandler:
                             print("Clear the terminal.")
                         case "quit":
                             print("Quit Jarvis.")
+                        case "reset":
+                            print("Reset Jarvis' conversation memory.")
             case "commands":
                 print("\n".join(self.commands))
+            case "reset":
+                global default_prompt
+                self.agent.conversation = Conversation(default_prompt)
 
 class Agent:
     def __init__(self, data_sources: list[DataSource], memory = None):
         self.data_sources = [source() for source in data_sources]
         self.llm_interface = LLMInterface()
+        global default_prompt
         self.conversation = Conversation(
-            """You are Jarvis, a helpful AI assistant with read-only access to the user's calendar, tasks, and email.
-You should use the provided data sources to give accurate and helpful responses. You can only directly remember up to 10 messages.
-When referencing information from data sources, be specific about where the information came from.
-If you don't have enough information to answer completely, say so."""
+            default_prompt
         )
         self.proactive = ProactiveTriggerHandler(self)
         self.command = CommandHandler(self)
