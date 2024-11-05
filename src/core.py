@@ -204,6 +204,18 @@ class CommandHandler:
             case "reset":
                 global default_prompt
                 self.agent.conversation = Conversation(default_prompt)
+            case "enable":
+                try:
+                    self.flags[args[0]] = True
+                    print(f"{args[0]} enabled")
+                except IndexError as e:
+                    print(f"No flag '{args[0]}'")
+            case "disable":
+                try:
+                    self.flags[args[0]] = False
+                    print(f"{args[0]} disabled")
+                except IndexError as e:
+                    print(f"No flag '{args[0]}'")
 
 class Agent:
     def __init__(self, data_sources: list[DataSource], memory = None):
