@@ -46,7 +46,7 @@ class LLMInterface:
             print(f"API error: {e}")
             raise
         
-    def get_response(self, messages: list[dict]):
+    def get_response(self, messages: list[dict] = []):
         try:
             return self._make_api_call(messages)
         except Exception as e:

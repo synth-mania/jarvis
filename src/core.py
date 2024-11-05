@@ -119,6 +119,11 @@ Respond starting only with 'yes' or 'no'. Be brief.""",
 class CommandHandler:
     def __init__(self, agent: "Agent"):
         self.agent = agent
+
+        self.flags = {
+            "amnesia": False,
+
+        }
     
         self.commands = [
             "quit",
@@ -126,7 +131,10 @@ class CommandHandler:
             "llm-info",
             "help",
             "commands",
-            "reset"
+            "reset",
+            "enable",
+            "disable",
+            "flags"
         ]
 
     def match(self, partial: str):
@@ -183,6 +191,14 @@ class CommandHandler:
                             print("Quit Jarvis.")
                         case "reset":
                             print("Reset Jarvis' conversation memory.")
+                        case "enable" | "disable":
+                            print("The enable and disable commands both take one parameter: the name of a boolean setting/flag to set.")
+                            print("For example,\n'/enable amnesia' would enable the 'amnesia' flag.")
+                            print("These commands are really just aliases to the 'set' command provided for convenience.")
+                            print("\nFor example, '/set amnesia True' is equivalent to the example above.")
+                            print("Likewise, '/set amnesia False' is equivalent to '/disable amnesia'")
+                        case "set":
+                            print("The 'set' command takes two parameters, a setting name, and a new value.")
             case "commands":
                 print("\n".join(self.commands))
             case "reset":
@@ -220,6 +236,11 @@ class Agent:
         self.conversation.add_interaction("user", context + user_input)
 
         messages = self.conversation.get_messages()
+
+        if conversation_effect and self.command.flags["amnesia"]:
+            global default_prompt
+            messages = Conversation(default_prompt).get_messages()
+        
         response = self.llm_interface.get_response(messages)
 
         if conversation_effect:
