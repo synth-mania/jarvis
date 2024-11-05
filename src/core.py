@@ -206,15 +206,17 @@ class CommandHandler:
                 self.agent.conversation = Conversation(default_prompt)
             case "enable":
                 try:
+                    self.flags[args[0]] # Create a KeyError for an invalid flag
                     self.flags[args[0]] = True
                     print(f"{args[0]} enabled")
-                except IndexError as e:
+                except KeyError as e:
                     print(f"No flag '{args[0]}'")
             case "disable":
                 try:
+                    self.flags[args[0]] # Create a KeyError for an invalid flag
                     self.flags[args[0]] = False
                     print(f"{args[0]} disabled")
-                except IndexError as e:
+                except KeyError as e:
                     print(f"No flag '{args[0]}'")
 
 class Agent:
@@ -245,13 +247,14 @@ class Agent:
         if use_context:
             context += f"Current data sources:\n{self.get_context()}"
 
-        self.conversation.add_interaction("user", context + user_input)
-
-        messages = self.conversation.get_messages()
-
         if conversation_effect and self.command.flags["amnesia"]:
             global default_prompt
-            messages = Conversation(default_prompt).get_messages()
+            amnesia_convo = Conversation(default_prompt)
+            amnesia_convo.add_interaction("user", context + user_input)
+            messages = amnesia_convo.get_messages()
+        else:
+            self.conversation.add_interaction("user", context + user_input)
+            messages = self.conversation.get_message()
         
         response = self.llm_interface.get_response(messages)
 
