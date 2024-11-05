@@ -254,7 +254,7 @@ class Agent:
             messages = amnesia_convo.get_messages()
         else:
             self.conversation.add_interaction("user", context + user_input)
-            messages = self.conversation.get_message()
+            messages = self.conversation.get_messages()
         
         response = self.llm_interface.get_response(messages)
 
