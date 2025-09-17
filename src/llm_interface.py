@@ -38,10 +38,19 @@ class LLMInterface:
             "messages": messages
         }
         
+        if os.getenv("DEBUG") == "enabled":
+            print(f"---\nDEBUG - API call:\n{messages}\n---\n")
+
+
         try:
             response = requests.post(self.api_url, headers=self.headers, json=data)
             response.raise_for_status()
-            return response.json()['choices'][0]['message']['content'].strip()
+            cleaned_response = response.json()['choices'][0]['message']['content'].strip()
+
+            if os.getenv("DEBUG") == "enabled":
+                print(f"---\nDEBUG - API response:\n{response.json()['choices'][0]['message']['content'].strip()}\n---")
+
+            return cleaned_response
         except Exception as e:
             print(f"API error: {e}")
             raise
