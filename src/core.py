@@ -77,11 +77,11 @@ class ProactiveTriggerHandler:
         response = self.agent.process_query(
             """Based on what you know about what the I am doing right now, is there anything helpful you should say to me?
 For example:
-If there is a new email, calendar event, or task that neither of us have mentioned, the answer is yes.
+If there is a new item from the data sources that neither of us have mentioned, the answer is yes.
 If nothing has changed, the answer is no.
 If you are not sure, the answer is no.
 
-Respond starting only with 'yes' or 'no'. Be brief.""",
+Respond only with 'yes' or 'no' and nothing else""",
             conversation_effect=False
         )
         response = response.strip().lower()
