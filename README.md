@@ -4,6 +4,7 @@ A command-line personal assistant that integrates with Google Calendar, Gmail, a
 
 ## Features
 
+- Compatible with any OpenAI-type LLM inference API endpoint. (Openrouter, OpenAI, LMStudio, llama.cpp, etc)
 - Gmail integration (view unread emails)
 - Google Calendar integration (check upcoming events) 
 - Google Tasks tracking (view tasks)
@@ -25,10 +26,15 @@ A command-line personal assistant that integrates with Google Calendar, Gmail, a
 2. Place your `credentials.json` file in the `src/data_sources/` directory
 3. Create a file named .env with environment variables in the root directory:
 
+
 ```bash
 # For OpenRouter
 LLM_API_TYPE=openrouter
 OPENROUTER_API_KEY=your_key_here
+
+USE_CALENDAR=enabled # enabled or disabled
+USE_TASKS=enabled
+USE_GMAIL=enabled
 
 # For local API
 #LLM_API_TYPE=local
